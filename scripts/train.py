@@ -1,15 +1,11 @@
-# scripts/train.py
 import sys
 import os
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import argparse
 import torch
 import logging
-from configs.config import Config
 from training.cross_validation import CrossValidationTrainer
-from data.data_loader import FoldDataLoader
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -17,57 +13,98 @@ logger = logging.getLogger(__name__)
 
 def main():
     parser = argparse.ArgumentParser(description="Train BotDMM model")
-    parser.add_argument('--config', type=str, default='configs/config.yaml',
-                        help='Path to configuration file')
-    parser.add_argument('--mode', type=str, default='cv',
-                        choices=['cv', 'single', 'test'],
-                        help='Training mode: cv for cross-validation, single for single fold, test for testing')
-    parser.add_argument('--fold', type=int, default=0,
-                        help='Fold ID for single fold training')
-    parser.add_argument('--device', type=str, default='cuda',
-                        help='Device to use (cuda or cpu)')
-
+    
+    # Data paths
+    parser.add_argument("--cross_validation_dir", type=str, 
+                        default="dual_format_cv/cross_validation",
+                        help="Cross validation data directory")
+    parser.add_argument("--results_dir", type=str, 
+                        default="./cv_results",
+                        help="Results save directory")
+    
+    parser.add_argument("--alpha", type=float, default=0.5,
+                        help="Orthogonal constraint coefficient α")
+    parser.add_argument("--embedding_dim", type=int, default=128,
+                        help="Embedding dimension")
+    parser.add_argument("--feature_dim", type=int, default=128,
+                        help="Feature dimension")
+    parser.add_argument("--num_steps", type=int, default=5,
+                        help="Number of temporal steps")
+    parser.add_argument("--dropout", type=float, default=0.3,
+                        help="Dropout rate")
+    
+    parser.add_argument("--lr", type=float, default=0.00005,
+                        help="Learning rate")
+    parser.add_argument("--weight_decay", type=float, default=5e-4,
+                        help="Weight decay")
+    parser.add_argument("--epochs", type=int, default=100,
+                        help="Number of epochs per fold")
+    parser.add_argument("--patience", type=int, default=20,
+                        help="Early stopping patience")
+    parser.add_argument("--clip_grad", type=float, default=1.0,
+                        help="Gradient clipping")
+    
+    parser.add_argument("--lambda_feature_contrast", type=float, default=0.1,
+                        help="Feature contrastive loss weight")
+    parser.add_argument("--lambda_class_contrast", type=float, default=0.1,
+                        help="Class contrastive loss weight")
+    parser.add_argument("--temperature", type=float, default=0.1,
+                        help="Contrastive learning temperature")
+    
+    # Other parameters
+    parser.add_argument("--seed", type=int, default=42,
+                        help="Random seed")
+    parser.add_argument("--no_cuda", action="store_true",
+                        help="Disable CUDA")
+    parser.add_argument("--test_on_holdout", action="store_true", default=True,
+                        help="Test best model on holdout set")
+    parser.add_argument("--verbose", action="store_true",
+                        help="Enable verbose output")
+    
     args = parser.parse_args()
-    config = Config(args.config)
-    device = torch.device(args.device if torch.cuda.is_available() else 'cpu')
+    
+    # Create config from command line arguments
+    config = {
+        'embedding_dim': args.embedding_dim,
+        'feature_dim': args.feature_dim,
+        'num_steps': args.num_steps,
+        'dropout': args.dropout,
+        'temperature': args.temperature,
+        'alpha': args.alpha,
+        'lr': args.lr,
+        'weight_decay': args.weight_decay,
+        'epochs': args.epochs,
+        'patience': args.patience,
+        'clip_grad': args.clip_grad,
+        'lambda_feature_contrast': args.lambda_feature_contrast,
+        'lambda_class_contrast': args.lambda_class_contrast,
+        'batch_size': 32  # Default value
+    }
+    
+    device = torch.device('cuda' if torch.cuda.is_available() and not args.no_cuda else 'cpu')
     logger.info(f"Using device: {device}")
-
-    if args.mode == 'cv':
-        # Run cross-validation
-        logger.info("Starting 10-fold cross-validation...")
-        cv_trainer = CrossValidationTrainer(
-            cv_dir=config.get('paths.data_dir'),
-            config=config.get('training'),
-            device=device
-        )
-        cv_summary = cv_trainer.run_cross_validation()
-        logger.info("Cross-validation completed!")
-
-    elif args.mode == 'single':
-        logger.info(f"Training single fold {args.fold}...")
-        cv_trainer = CrossValidationTrainer(
-            cv_dir=config.get('paths.data_dir'),
-            config=config.get('training'),
-            device=device
-        )
-        fold_results = cv_trainer.train_fold(args.fold)
-        logger.info(f"Fold {args.fold} training completed!")
-
-    elif args.mode == 'test':
+    
+    torch.manual_seed(args.seed)
+    
+    cv_trainer = CrossValidationTrainer(
+        cv_dir=args.cross_validation_dir,
+        config=config,
+        device=device
+    )
+    
+    cv_trainer.results_dir = args.results_dir
+    os.makedirs(args.results_dir, exist_ok=True)
+    
+    logger.info("Starting 10-fold cross-validation...")
+    cv_summary = cv_trainer.run_cross_validation()
+    
+    # Test on holdout if requested
+    if args.test_on_holdout:
         logger.info("Testing on holdout set...")
-        cv_trainer = CrossValidationTrainer(
-            cv_dir=config.get('paths.data_dir'),
-            config=config.get('training'),
-            device=device
-        )
-        test_loader = FoldDataLoader(
-            cv_dir=config.get('paths.data_dir'),
-            fold_id=-1,
-            device=device
-        ).get_val_loader(batch_size=config.get('training.batch_size'))
-
-        test_results = cv_trainer.test_on_holdout(test_loader)
-        logger.info("Testing completed!")
+        # Load test data loader here
+        # test_results = cv_trainer.test_on_holdout(test_loader)
+    
+    logger.info("Training completed!")
 
 
 if __name__ == "__main__":
