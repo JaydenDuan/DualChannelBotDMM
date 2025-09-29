@@ -20,12 +20,25 @@ Recent versions of PyTorch, Transformers, PyTorch Geometric, and standard ML lib
 
 $ pip install -r requirements.txt
 
-Basic Training:
+Basic Training follow command below:
 
 python scripts/train.py \
-    --config configs/config.yaml \
-    --mode cv \
-    --device cuda
+    --cross_validation_dir dual_format_cv/cross_validation \
+    --results_dir experiments/exp_001 \
+    --embedding_dim 128 \
+    --feature_dim 128 \
+    --num_steps 5 \
+    --dropout 0.3 \
+    --lr 0.00005 \
+    --weight_decay 0.0005 \
+    --epochs 100 \
+    --patience 20 \
+    --clip_grad 1.0 \
+    --lambda_feature_contrast 0.1 \
+    --lambda_class_contrast 0.1 \
+    --temperature 0.1 \
+    --alpha 0.5 \
+    --seed 42 \
     
 --embedding_dim: Dimension of feature embeddings (default: 128)
 --num_temporal_steps: Number of temporal snapshots (default: 5)
