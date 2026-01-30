@@ -44,4 +44,7 @@ You can run the following command to train BotDMM.
     --alpha 0.5
     --seed 42
 
+### Dataset Link:
+For whole dataset training: [https://drive.google.com/drive/folders/1Ih7GNib7k6c_SxIWeEUeLfAwP3MYisyh?usp=drive_link](https://drive.google.com/drive/folders/1xmjYgqx6ycOTwaNswnCwGkyKsr1XARub?usp=sharing)
+
 
