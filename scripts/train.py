@@ -16,7 +16,7 @@ def main():
     
     # Data paths
     parser.add_argument("--cross_validation_dir", type=str, 
-                        default="dual_format_cv/cross_validation",
+                        default="Dataset",
                         help="Cross validation data directory")
     parser.add_argument("--results_dir", type=str, 
                         default="./cv_results",
@@ -109,3 +109,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
