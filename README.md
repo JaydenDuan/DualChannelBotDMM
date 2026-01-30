@@ -31,13 +31,13 @@ pip install torch-geometric scikit-learn tqdm
 
 ### Twibot-20 (3-class classification)
 
-Download: [Google Drive](https://drive.google.com/drive/folders/1xmjYgqx6ycOTwaNswnCwGkyKsr1XARub?usp=sharing)
+Download: https://drive.google.com/drive/folders/1da2yI0oLGvEzG-TOJ8UohJSMX-9rnPYb?usp=drive_link
 
 Classes: Human, Traditional Bot, LLM-driven Bot
 
 ### BotSim (Binary classification)
 
-Download: [TODO: Add dataset link]
+Download: https://drive.google.com/drive/folders/1da2yI0oLGvEzG-TOJ8UohJSMX-9rnPYb?usp=drive_link
 
 Classes: Human, Bot
 
