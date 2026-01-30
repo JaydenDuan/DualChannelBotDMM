@@ -105,7 +105,3 @@ If you make use of this code or the BotDMM algorithm in your work, please cite t
   publisher={Elsevier}
 }
 ```
-
-## License
-
-MIT License
